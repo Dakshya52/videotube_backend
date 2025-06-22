@@ -4,6 +4,7 @@ import {User} from '../models/user.model.js'; // Assuming you have a User model 
 import { uploadOnCloudinary } from '../utils/cloudinary.js';
 import { ApiResponse} from '../utils/ApiResponse.js';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 
 const registerUser = asyncHandler(async(req, res) => {
     const {userName,email,password,fullName} = req.body;
@@ -216,6 +217,10 @@ const updateAccountDetails = asyncHandler(async(req,res)=>{
         throw new ApiError(400, "At least one field is required to update");
     }
 
+    if(fullName==="" || userName==="" || email===""){
+        throw new ApiError(400, "Fields cannot be empty");
+    }
+
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
@@ -236,10 +241,10 @@ const updateAccountDetails = asyncHandler(async(req,res)=>{
 })
 
 const updateUserAvatar = asyncHandler(async(req,res)=>{
-    const avatarLocalPath = req.file?.avatar[0]?.path
+    const avatarLocalPath = req.file?.path
 
     if(!avatarLocalPath){
-        throw new ApiError(400, "Avatar filie is required");
+        throw new ApiError(400, "Avatar file is required");
     }
 
     const uploadAvatar = await uploadOnCloudinary(avatarLocalPath);
@@ -267,10 +272,10 @@ const updateUserAvatar = asyncHandler(async(req,res)=>{
 })
 
 const updateUserCoverImage = asyncHandler(async(req,res)=>{
-    const coverImageLocalPath = req.file?.coverImage[0]?.path
+    const coverImageLocalPath = req.file?.path
 
     if(!coverImageLocalPath){
-        throw new ApiError(400, "Cover Image filie is required");
+        throw new ApiError(400, "Cover Image file is required");
     }
 
     const uploadCoverImage = await uploadOnCloudinary(coverImageLocalPath);
@@ -297,21 +302,21 @@ const updateUserCoverImage = asyncHandler(async(req,res)=>{
     .json(new ApiResponse(200, user, "CoverImage updated successfully"));
 })
 
-const getUserChannelProfile = asyncHandler(async(req,res)=>{
-    const {userName} = req.params;
+const getUserChannelProfile = asyncHandler(async(req, res) => {
+    const {userName} = req.params
 
-    if(!userName?.trim()){
-        throw new ApiError(400, "Username is missing");
+    if (!userName?.trim()) {
+        throw new ApiError(400, "username is missing")
     }
 
     const channel = await User.aggregate([
         {
             $match: {
-                userName: userName.toLowerCase()
+                userName: userName?.toLowerCase()
             }
         },
         {
-            $lookup:{
+            $lookup: {
                 from: "subscriptions",
                 localField: "_id",
                 foreignField: "channel",
@@ -319,7 +324,7 @@ const getUserChannelProfile = asyncHandler(async(req,res)=>{
             }
         },
         {
-            $lookup:{
+            $lookup: {
                 from: "subscriptions",
                 localField: "_id",
                 foreignField: "subscriber",
@@ -327,45 +332,46 @@ const getUserChannelProfile = asyncHandler(async(req,res)=>{
             }
         },
         {
-            $addFields:{
-                subsribersCount:{
+            $addFields: {
+                subscribersCount: {
                     $size: "$subscribers"
                 },
-                channelsSubscibedToCount :{
+                channelsSubscribedToCount: {
                     $size: "$subscribedTo"
                 },
-                isSubscribed:{
-                    $cond : {
-                        if:{$in :[req.user._id, "$subscribers.subscriber"]},
-                        then:true,
-                        else:false
+                isSubscribed: {
+                    $cond: {
+                        if: {$in: [req.user?._id, "$subscribers.subscriber"]},
+                        then: true,
+                        else: false
                     }
                 }
             }
         },
         {
-            $project:{
-                fullName:1,
-                userName:1,
-                subsribersCount:1,
-                channelsSubscibedToCount:1,
-                isSubscribed:1,
-                avatar:1,
-                coverImage:1,
-                email:1,
+            $project: {
+                fullName: 1,
+                userName: 1,
+                subscribersCount: 1,
+                channelsSubscribedToCount: 1,
+                isSubscribed: 1,
+                avatar: 1,
+                coverImage: 1,
+                email: 1
+
             }
         }
     ])
 
-    console.log(`this is what aggregate returns ${channel}`)
-
-    if(!channel?.length){
-        throw new ApiError(404, "Channel does not exist");
+    if (!channel?.length) {
+        throw new ApiError(404, "channel does not exists")
     }
 
     return res
     .status(200)
-    .json(new ApiResponse(200, channel[0], "Channel profile fetched successfully"));
+    .json(
+        new ApiResponse(200, channel[0], "User channel fetched successfully")
+    )
 })
 
 const getWatchHistory = asyncHandler(async(req,res)=>{

@@ -9,9 +9,9 @@ app.use(cors({
     credentials: true
 }));
  
-app.use(express.json({limit: '16kb'})) // for parsing application/json
+app.use(express.json({limit: '50mb'})) // for parsing application/json
 // The limit option is set to '16kb' to restrict the size of JSON payloads
-app.use(express.urlencoded({extended: true, limit: '16kb'})) // for parsing application/json and application/x-www-form-urlencoded
+app.use(express.urlencoded({extended: true, limit: '50mb'})) // for parsing application/json and application/x-www-form-urlencoded
 app.use(express.static('public')) 
 // The express.static middleware serves static files from the 'public' directory. 
 

@@ -20,6 +20,7 @@ export const verifyJWT = asyncHandler(async(req,_,next)=>{
         }
     
         req.user = user;
+        // It attaches the user object to the request, allowing access to user data in subsequent middleware or route handlers.
         next();
     } catch (error) {
         throw new ApiError(401, error.message || "Invalid access token ");
