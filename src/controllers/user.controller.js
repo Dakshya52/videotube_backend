@@ -217,7 +217,7 @@ const updateAccountDetails = asyncHandler(async(req,res)=>{
         throw new ApiError(400, "At least one field is required to update");
     }
 
-    if(fullName==="" || userName==="" || email===""){
+    if(fullName.trim()==="" || userName.trim()==="" || email.trim()===""){
         throw new ApiError(400, "Fields cannot be empty");
     }
 
