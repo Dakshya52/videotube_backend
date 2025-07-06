@@ -223,7 +223,16 @@ const deleteVideo = asyncHandler(async (req, res) => {
     await deleteFromCloudinary(generatePublicIdForTheCloudinaryUrl(video.videoFile),"video")
     await deleteFromCloudinary(generatePublicIdForTheCloudinaryUrl(video.thumbnail),"image")
     const deletedVideo = await Video.findByIdAndDelete(videoId)
+
+    await Like.deleteMany({
+        video: videoId
+    })
+
     
+    await Comment.deleteMany({
+        video: videoId,
+    })
+
     return res
     .status(200)
     .json(new ApiResponse(200,deletedVideo,"Video deleted successfully"))
